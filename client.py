@@ -34,8 +34,7 @@ def get_handler(arg):
     public = None
     uri = ""
     if arg.cap:
-        uri = arg.cap
-        cap = uri.split(":")
+        cap = arg.cap.split(":")
     else:
         # TODO this should read the current dir to find out the URI for the file
         with open('private/files.txt', "r") as f:
@@ -47,7 +46,6 @@ def get_handler(arg):
                     key_ind = line.find("|")+1
                     line = line[key_ind:] 
                     cap = line.split(":")
-                    uri = capToString(cap)
                     file_name = arg.name
                     abs_path = os.path.abspath(pjoin('private/keys/', file_name))
                     # check if this file was created by the user
@@ -56,6 +54,16 @@ def get_handler(arg):
                         with open('private/keys/'+arg.name+"public", "r") as f:
                             public = f.read() 
                     break
+    
+    if cap[0] == FILE_WRITE_CAP or cap[0] == DIR_WRITE_CAP:
+        h = crypto.my_hash(cap[1])[:16]
+        h = crypto.my_hash(h)
+        uri = capToString((cap[0], h, cap[2]))
+    elif cap[0] == DIR_READ_CAP or cap[0] == FILE_WRITE_CAP:
+        h = crypto.my_hash(cap[1])
+        uri = capToString((cap[0], h, cap[2]))
+    else:
+        uri = ""
     # access the file via the write-cap
     cipher = get_data(uri) 
     data_ar = cipher.split(SPLIT_SYMBOL)
@@ -122,14 +130,12 @@ def mkdir_handler(arg):
                     (private, public, cap) = crypto.generate_RSA()
                     cap = [DIR_WRITE_CAP, cap[0], cap[1]]
                     data[arg.name] =  ":".join(cap)
-                    print "APPENDED DATA: ", data
                     # post new dir 1st 
                     new_data = {".": ":".join(cap)}
                     new_data = json.dumps(data)
                     new_data = crypto.package_data(new_data, cap, private, public)
                     print_capabilities(cap)
                     post_data(new_data, capToString(cap))
-                    print "NEW DIR POSTED"
                 else:
                     return
     # post root dir data 
@@ -137,7 +143,6 @@ def mkdir_handler(arg):
     data = crypto.package_data(data, root_cap, root_private, root_public)
     print_capabilities(root_cap)
     post_data(data, capToString(root_cap))
-    print "ROOT UPDATED"
 """
 def update_root(uri, new_data):
     cipher = get_data(uri)
@@ -193,6 +198,8 @@ def put_handler(arg):
     data = arg.data
     data = crypto.package_data(data, cap, private, public)
     print_capabilities(cap)
+    h = crypto.my_hash(cap[1])[:16]
+    cap[1] = crypto.my_hash(h)
     post_data(data, capToString(cap))
 
 def print_capabilities(cap):
@@ -224,7 +231,6 @@ def ls_handler(arg):
             if line and line != "\n":
                 line = line[line.find("|")+1:].strip("\n")
                 cap = line.split(":")
-                print "CAP: ", cap
                 cipher = get_data(line)
                 (data, private, public)= crypto.unpackage_data(cap, cipher) 
             else:

@@ -39,13 +39,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         name = s.path[s.path.rfind("/")+1:]
         cap = name.split(":") 
         r = False
+        file_name = cap[1] 
         if cap[0] ==  FILE_READ_CAP or cap[0] == DIR_READ_CAP:
             print "READ"
             r = True
-            file_name = crypto.my_hash(cap[1][:16])
         elif cap[0] ==  FILE_WRITE_CAP or cap[0] == DIR_WRITE_CAP:
             print "WRITE"
-            file_name = crypto.my_hash(crypto.my_hash(cap[1][:16])[:16])
         else:
             
             print "NOTHING"
@@ -104,7 +103,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
         # allow write if the file does not exist or
         # when you present write cap
-        file_name = crypto.my_hash(crypto.my_hash(cap[1])[:16])
+        file_name = cap[1]
         store_path = pjoin(curdir+DATALOCATION, file_name)
         print "STORE PATH: ", store_path
         # TODO with the directory structure, notify the server of the created files
