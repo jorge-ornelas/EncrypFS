@@ -43,7 +43,9 @@ def test2():
     expected = "asdfasdf"  
     
     output = f.read()
+    print "output", output
     sp = output.split("\n")[5]
+    print "sp", sp
 
     assert(sp == expected)
     
@@ -57,7 +59,7 @@ def test3():
 
     print "\nTEST #3: Getting file that was corrupted by server\n"
 
-    os.system("./resetserver.sh; ./resetclient.sh")
+    #os.system("./resetserver.sh; ./resetclient.sh")
 
     put = os.system("python client.py put -n 'test3.txt' -d 'asdfasdf'  \
                                       > td_files/3.out")
@@ -146,7 +148,7 @@ def test6():
 
 
 
-os.system("rm td_files/*; ./resetserver.sh; ./resetclient.sh")
+#os.system("rm td_files/*; ./resetserver.sh; ./resetclient.sh")
 if len(sys.argv) != 1:
     if sys.argv[1] == '1':
         test1()
